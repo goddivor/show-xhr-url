@@ -1,5 +1,9 @@
 // src/popup/index.ts
 import browser from '../utils/browser';
+// @ts-ignore - Ignorer l'erreur de type pour axios
+import axios from 'axios';
+// Importer notre utilitaire de cookies
+import { tryGetCookies } from '../utils';
 
 interface DetailedRequest {
   url: string;
@@ -65,6 +69,258 @@ function formatTime(timestamp: number): string {
   const seconds = date.getSeconds().toString().padStart(2, '0');
   const milliseconds = date.getMilliseconds().toString().padStart(3, '0');
   return `${hours}:${minutes}:${seconds}.${milliseconds}`;
+}
+
+// Fonction pour extraire le token CSRF des en-têtes de requête
+function extractCsrfToken(requestHeaders?: Record<string, string>): string | null {
+  if (!requestHeaders) return null;
+  
+  // Chercher le token CSRF dans différentes variations possibles de noms d'en-têtes
+  const csrfHeaderNames = [
+    'csrf-token',
+    'x-csrf-token',
+    'xsrf-token',
+    'x-xsrf-token',
+    '_csrf',
+    '_csrftoken'
+  ];
+  
+  for (const name of csrfHeaderNames) {
+    if (requestHeaders[name]) {
+      return requestHeaders[name];
+    }
+  }
+  
+  return null;
+}
+
+// Fonction pour tester une requête GET avec Axios
+async function testGetRequest(request: DetailedRequest): Promise<any> {
+  try {
+    // Extraire le token CSRF des en-têtes de la requête
+    const csrfToken = extractCsrfToken(request.requestHeaders);
+    
+    // Préparer les en-têtes pour la requête Axios
+    const headers: Record<string, string> = {};
+    
+    // Ajouter le token CSRF si disponible
+    if (csrfToken) {
+      headers['Csrf-token'] = csrfToken;
+    }
+    
+    // Tenter de récupérer les cookies pour cette URL
+    const cookies = await tryGetCookies(request.url, request.requestHeaders);
+    if (cookies) {
+      headers['Cookie'] = cookies;
+    }
+    
+    // Exécuter la requête avec Axios
+    const response = await axios.get(request.url, {
+      headers: headers,
+      withCredentials: true // Pour inclure les cookies dans la requête
+    });
+    
+    return response.data;
+  } catch (error: unknown) {
+    console.error('Erreur lors du test de la requête:', error);
+    
+    // Vérifier si l'erreur est une erreur Axios avec réponse
+    if (axios.isAxiosError(error) && error.response) {
+      return {
+        error: true,
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data
+      };
+    }
+    return { error: true, message: String(error) };
+  }
+}
+
+// Fonction pour ouvrir une nouvelle fenêtre et afficher le résultat JSON
+function displayJsonResult(data: any): void {
+  // Tenter d'ouvrir une nouvelle fenêtre
+  const resultWindow = window.open('', 'ResultWindow', 'width=800,height=600');
+  
+  if (!resultWindow) {
+    // Si l'ouverture de la fenêtre échoue, utiliser une méthode alternative
+    displayJsonResultAlternative(data);
+    return;
+  }
+  
+  // Préparer le contenu HTML
+  const htmlContent = `
+  <!DOCTYPE html>
+  <html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultat de la requête</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      pre {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 15px;
+        overflow: auto;
+        max-height: 80vh;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      button {
+        background: #4688F1;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #3B78E7;
+      }
+      .success { color: #388E3C; }
+      .error { color: #D32F2F; }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <h2 class="${data.error ? 'error' : 'success'}">
+        ${data.error ? 'Erreur' : 'Succès'} 
+        ${data.status ? `(${data.status} ${data.statusText})` : ''}
+      </h2>
+      <button id="copyBtn">Copier le JSON</button>
+    </div>
+    <pre id="jsonOutput">${JSON.stringify(data, null, 2)}</pre>
+    
+    <script>
+      document.getElementById('copyBtn').addEventListener('click', function() {
+        const jsonText = document.getElementById('jsonOutput').textContent;
+        navigator.clipboard.writeText(jsonText)
+          .then(() => {
+            this.textContent = 'Copié !';
+            setTimeout(() => { this.textContent = 'Copier le JSON'; }, 2000);
+          })
+          .catch(err => {
+            console.error('Erreur lors de la copie:', err);
+            alert('Impossible de copier le texte');
+          });
+      });
+    </script>
+  </body>
+  </html>
+  `;
+  
+  // Écrire le contenu dans la nouvelle fenêtre
+  resultWindow.document.write(htmlContent);
+  resultWindow.document.close();
+}
+
+// Méthode alternative d'affichage si window.open échoue
+function displayJsonResultAlternative(data: any): void {
+  // Création d'un élément modal dans le DOM actuel
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background-color: white;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 800px;
+    max-height: 80%;
+    overflow: auto;
+    padding: 20px;
+    position: relative;
+  `;
+  
+  const closeButton = document.createElement('button');
+  closeButton.textContent = '×';
+  closeButton.style.cssText = `
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+  `;
+  closeButton.addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  const title = document.createElement('h2');
+  title.textContent = data.error ? 'Erreur' : 'Succès';
+  title.style.color = data.error ? '#D32F2F' : '#388E3C';
+  if (data.status) {
+    title.textContent += ` (${data.status} ${data.statusText})`;
+  }
+  
+  const copyButton = document.createElement('button');
+  copyButton.textContent = 'Copier le JSON';
+  copyButton.style.cssText = `
+    background: #4688F1;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 10px;
+  `;
+  copyButton.addEventListener('click', () => {
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+      .then(() => {
+        copyButton.textContent = 'Copié !';
+        setTimeout(() => { copyButton.textContent = 'Copier le JSON'; }, 2000);
+      })
+      .catch(err => {
+        console.error('Erreur lors de la copie:', err);
+        alert('Impossible de copier le texte');
+      });
+  });
+  
+  const preElement = document.createElement('pre');
+  preElement.style.cssText = `
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    overflow: auto;
+    max-height: 60vh;
+    font-size: 14px;
+    line-height: 1.5;
+  `;
+  preElement.textContent = JSON.stringify(data, null, 2);
+  
+  modalContent.appendChild(closeButton);
+  modalContent.appendChild(title);
+  modalContent.appendChild(copyButton);
+  modalContent.appendChild(preElement);
+  modal.appendChild(modalContent);
+  
+  document.body.appendChild(modal);
 }
 
 // Demander les requêtes détaillées au background script
@@ -267,7 +523,6 @@ function createRequestDetailsElement(request: DetailedRequest, index: number): H
   detailsContainer.appendChild(requestHeadersSection);
   detailsContainer.appendChild(responseHeadersSection);
   
-  // Ajouter des boutons d'action
   const actionsContainer = document.createElement('div');
   actionsContainer.className = 'details-actions';
   
@@ -291,6 +546,30 @@ function createRequestDetailsElement(request: DetailedRequest, index: number): H
       copyParamsBtn.textContent = 'Copier les paramètres';
     }, 2000);
   });
+  
+  // Bouton de test de requête GET uniquement pour les requêtes GET
+  if (request.method.toUpperCase() === 'GET') {
+    const testRequestBtn = document.createElement('button');
+    testRequestBtn.textContent = 'Tester la requête';
+    testRequestBtn.className = 'test-request-btn';
+    testRequestBtn.addEventListener('click', async () => {
+      testRequestBtn.textContent = 'Chargement...';
+      testRequestBtn.disabled = true;
+      
+      try {
+        const result = await testGetRequest(request);
+        displayJsonResult(result);
+      } catch (error) {
+        console.error('Erreur lors du test de la requête:', error);
+        displayJsonResult({ error: true, message: String(error) });
+      } finally {
+        testRequestBtn.textContent = 'Tester la requête';
+        testRequestBtn.disabled = false;
+      }
+    });
+    
+    actionsContainer.appendChild(testRequestBtn);
+  }
   
   const copyAllBtn = document.createElement('button');
   copyAllBtn.textContent = 'Copier tout';
