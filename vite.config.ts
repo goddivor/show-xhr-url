@@ -2,7 +2,7 @@
 import { defineConfig } from 'vite';
 import webExtension from 'vite-plugin-web-extension';
 import path from 'path';
-import type {PluginOption } from 'vite';
+import type { PluginOption } from 'vite';
 
 // Créer un objet manifest séparé
 const manifest = {
@@ -14,7 +14,10 @@ const manifest = {
     'webRequest',
     'tabs',
     'storage',
-    'clipboardWrite'
+    'clipboardWrite',
+    'cookies',
+    'http://*/*',
+    'https://*/*'
   ],
   host_permissions: ['<all_urls>'],
   action: {
