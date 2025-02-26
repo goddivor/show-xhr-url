@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShowXhrUrl</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      width: 600px;
+      max-height: 600px;
+      overflow-y: auto;
+      margin: 0;
+      padding: 10px;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #4688F1;
+    }
+    
+    .top-controls {
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 10;
+      padding-top: 5px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .search-bar input {
+      flex: 1;
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .filter-btn {
+      border: 1px solid #ddd;
+      background: #f5f5f5;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    
+    .filter-btn.active {
+      background: #4688F1;
+      color: white;
+    }
+    
+    .request-list {
+      border-top: 1px solid #eee;
+      max-height: 500px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .requests-list-container {
+      max-height: 250px;
+      overflow-y: auto;
+      border-bottom: 1px solid #eee;
+      flex: 0 0 auto;
+    }
+    
+    .request-item {
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .request-item:hover {
+      background-color: #f8f8f8;
+    }
+    
+    .request-item.selected {
+      background-color: #e3f2fd;
+    }
+    
+    .request-method {
+      display: inline-block;
+      font-weight: bold;
+      width: 50px;
+    }
+    
+    .request-method.get { color: #4CAF50; }
+    .request-method.post { color: #2196F3; }
+    .request-method.put { color: #FF9800; }
+    .request-method.delete { color: #F44336; }
+    
+    .request-status {
+      display: inline-block;
+      font-weight: bold;
+      margin-left: 10px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+    
+    .status-success { background-color: #4CAF50; color: white; }
+    .status-warning { background-color: #FF9800; color: white; }
+    .status-error { background-color: #F44336; color: white; }
+    .status-pending { background-color: #9E9E9E; color: white; }
+    
+    .request-url {
+      word-break: break-all;
+      margin-left: 5px;
+    }
+    
+    .request-time {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+    
+    .no-data {
+      margin: 20px 0;
+      color: #999;
+      text-align: center;
+    }
+    
+    .request-details {
+      display: none;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      margin-top: 10px;
+      overflow-y: auto;
+      max-height: 300px;
+      flex: 1 1 auto;
+    }
+    
+    .details-section {
+      margin-bottom: 15px;
+    }
+    
+    .details-section h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #4688F1;
+      font-size: 14px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+      position: sticky;
+      top: 0;
+      background-color: #f9f9f9;
+      z-index: 5;
+    }
+    
+    .detail-item {
+      display: flex;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+    
+    .detail-item.highlight {
+      background-color: #fff8e1;
+      padding: 5px;
+      border-radius: 4px;
+      border-left: 3px solid #FFC107;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .detail-item span:first-child {
+      font-weight: bold;
+      min-width: 150px;
+    }
+    
+    .params-container {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      padding: 10px;
+      border-radius: 4px;
+      background-color: #f0f8ff; /* Légère couleur bleue pour distinguer des headers */
+    }
+    
+    .headers-container {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    .details-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 15px;
+      position: sticky;
+      bottom: 0;
+      background-color: #f9f9f9;
+      padding-top: 5px;
+      z-index: 5;
+    }
+    
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      position: sticky;
+      bottom: 0;
+      background-color: white;
+      padding-top: 5px;
+      z-index: 10;
+    }
+    
+    button {
+      background: #4688F1;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background: #3B78E7;
+    }
+  </style>
+</head>
+<body>
+  <h1>ShowXhrUrl - Inspecteur de requêtes</h1>
+  
+  <div class="top-controls">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Rechercher URL, Referer ou Origin..." />
+      <button id="searchBtn">Rechercher</button>
+      <button id="clearSearchBtn">Effacer</button>
+    </div>
+    
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">Tous</button>
+      <button class="filter-btn" data-filter="GET">GET</button>
+      <button class="filter-btn" data-filter="POST">POST</button>
+      <button class="filter-btn" data-filter="PUT">PUT</button>
+      <button class="filter-btn" data-filter="DELETE">DELETE</button>
+    </div>
+  </div>
+  
+  <div class="request-list" id="requestList">
+    <div class="no-data">Aucune requête détectée</div>
+  </div>
+  
+  <div class="actions">
+    <button id="clearBtn">Effacer</button>
+    <button id="refreshBtn">Rafraîchir</button>
+    <button id="copyBtn">Copier les URLs</button>
+  </div>
+  
+  <script src="./index.ts" type="module"></script>
+</body>
+</html>
