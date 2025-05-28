@@ -3,7 +3,11 @@
     <img src="public/icons/Icon%20OR.png" alt="ShowXhr" title="ShowXhr" width="100"/>
 </a>
 
-# ShowHXR Requests
+<div align="center">
+<a href="">
+    <img src="public/screenshot/friendly_screenshot.png" alt="ShowXhr" title="ShowXhr"/>
+</a> 
+</div>
 
 </div>
 
