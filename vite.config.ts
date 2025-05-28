@@ -1,44 +1,55 @@
 // vite.config.ts
-import { defineConfig } from 'vite';
-import webExtension from 'vite-plugin-web-extension';
-import path from 'path';
-import type { PluginOption } from 'vite';
+import { defineConfig } from "vite";
+import webExtension from "vite-plugin-web-extension";
+import path from "path";
+import type { PluginOption } from "vite";
 
 // Créer un objet manifest séparé
 const manifest = {
-  name: 'ShowXhrUrl',
-  version: '1.0.0',
+  name: "ShowXhrUrl",
+  version: "1.0.0",
   manifest_version: 3,
-  description: 'Affiche tous les URLs des requêtes fetch/XHR avec détails complets',
+  description:
+    "Affiche tous les URLs des requêtes fetch/XHR avec détails complets",
   permissions: [
-    'webRequest',
-    'tabs',
-    'storage',
-    'clipboardWrite',
-    'cookies',
-    'http://*/*',
-    'https://*/*'
+    "webRequest",
+    "tabs",
+    "storage",
+    "clipboardWrite",
+    "cookies",
+    "http://*/*",
+    "https://*/*",
   ],
-  host_permissions: ['<all_urls>'],
+  host_permissions: ["<all_urls>"],
+  icons: {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png",
+  },
   action: {
-    default_popup: 'src/popup/index.html'
+    default_popup: "src/popup/index.html",
+    default_icon: {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png",
+    },
   },
   background: {
-    service_worker: 'src/background/index.ts',
-    type: 'module'
+    service_worker: "src/background/index.ts",
+    type: "module",
   },
   content_scripts: [
     {
-      matches: ['<all_urls>'],
-      js: ['src/content/index.ts']
-    }
+      matches: ["<all_urls>"],
+      js: ["src/content/index.ts"],
+    },
   ],
   web_accessible_resources: [
     {
-      resources: ['src/inject/index.ts'],
-      matches: ['<all_urls>']
-    }
-  ]
+      resources: ["src/inject/index.ts"],
+      matches: ["<all_urls>"],
+    },
+  ],
 };
 
 export default defineConfig({
@@ -46,13 +57,13 @@ export default defineConfig({
     // @ts-ignore - Ignorer les erreurs de type pour le manifest
     webExtension({
       manifest: () => manifest,
-      browser: 'chrome'
-    }) as PluginOption
+      browser: "chrome",
+    }) as PluginOption,
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@utils': path.resolve(__dirname, './src/utils')
-    }
-  }
+      "@": path.resolve(__dirname, "./src"),
+      "@utils": path.resolve(__dirname, "./src/utils"),
+    },
+  },
 });
