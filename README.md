@@ -1,8 +1,11 @@
-<center>
+<div align="center">
 <a href="">
     <img src="public/icons/Icon%20OR.png" alt="ShowXhr" title="ShowXhr" width="100"/>
 </a>
-</center>
+
+# ShowHXR Requests
+
+</div>
 
 ```markdown
 # XHR Request Monitor Extension
@@ -14,6 +17,7 @@ Cette extension Chrome liste toutes les requêtes XHR du navigateur, triées par
 
 ## 📁 Structure du projet
 
+```
 📁 .
 │   📁 public
 │   │   📁 icons
@@ -50,7 +54,7 @@ Cette extension Chrome liste toutes les requêtes XHR du navigateur, triées par
 │   📄 README.md
 │   📄 tsconfig.json
 │   📄 vite.config.ts
-````
+```
 
 ## 🚀 Prérequis
 
@@ -61,10 +65,11 @@ Cette extension Chrome liste toutes les requêtes XHR du navigateur, triées par
 ## 🔧 Installation
 
 1. Cloner le dépôt :
-   ```bash
+
+```
    git clone https://github.com/goddivor/show-xhr-url.git
    cd show-xhr-url
-````
+```
 
 2. Installer les dépendances :
 
@@ -107,7 +112,3 @@ Les contributions sont les bienvenues ! Ouvrez une issue ou soumettez un pull re
 ---
 
 _Développé avec ❤️ par l’équipe XHR Request Monitor Mdr 😂._
-
-```
-
-```
