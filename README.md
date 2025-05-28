@@ -73,7 +73,20 @@ Cette extension Chrome liste toutes les requêtes XHR du navigateur, triées par
    cd show-xhr-url
 ```
 
-2. Installer les dépendances :
+## 🔧 Installation
+
+2. Renommer le fichier .env.example en .env et le replir comme suit :
+
+```
+    VITE_CHATGPT_API_KEY=Votre Clé API ChatGpt 
+    VITE_CHATGPT_SPECIAL_PROMPT=Votre Prompt pour stringified le Json
+    VITE_OPENAI_API_URL=L'Url de l'API de OpenAI 
+    VITE_OPENAI_MODEL=Le type de model
+    VITE_OPENAI_MAX_TOKENS=Token maximal
+    VITE_OPENAI_TEMPERATURE=Température
+```
+
+3. Installer les dépendances :
 
    ```bash
    npm install
