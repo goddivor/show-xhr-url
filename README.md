@@ -1,16 +1,18 @@
-```markdown
-<!-- Project Icon -->
-![Project Icon](public/icons/icon OR.png)
+<center>
+<a href="">
+    <img src="public/icons/Icon%20OR.png" alt="ShowXhr" title="ShowXhr" width="100"/>
+</a>
+</center>
 
+```markdown
 # XHR Request Monitor Extension
 
 **Dépôt GitHub** : https://github.com/goddivor/show-xhr-url
 
 Cette extension Chrome liste toutes les requêtes XHR du navigateur, triées par type (GET, POST, PUT, DELETE, etc.), et fournit une interface popup pour visualiser et filtrer ces appels en temps réel.
+```
 
 ## 📁 Structure du projet
-
-```
 
 📁 .
 │   📁 public
@@ -48,7 +50,6 @@ Cette extension Chrome liste toutes les requêtes XHR du navigateur, triées par
 │   📄 README.md
 │   📄 tsconfig.json
 │   📄 vite.config.ts
-
 ````
 
 ## 🚀 Prérequis
@@ -105,7 +106,8 @@ Les contributions sont les bienvenues ! Ouvrez une issue ou soumettez un pull re
 
 ---
 
-*Développé avec ❤️ par l’équipe XHR Request Monitor Mdr 😂.*
+_Développé avec ❤️ par l’équipe XHR Request Monitor Mdr 😂._
 
 ```
+
 ```
