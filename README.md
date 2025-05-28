@@ -8,8 +8,6 @@
 </div>
 
 ```markdown
-# XHR Request Monitor Extension
-
 **Dépôt GitHub** : https://github.com/goddivor/show-xhr-url
 
 Cette extension Chrome liste toutes les requêtes XHR du navigateur, triées par type (GET, POST, PUT, DELETE, etc.), et fournit une interface popup pour visualiser et filtrer ces appels en temps réel.
