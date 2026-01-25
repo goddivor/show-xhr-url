@@ -1,22 +1,22 @@
 // vite.config.ts
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 import webExtension from "vite-plugin-web-extension";
 import path from "path";
-import type { PluginOption } from "vite";
 
-// Créer un objet manifest séparé
+// Manifest V3 with Side Panel
 const manifest = {
   name: "ShowXhrUrl",
-  version: "1.0.0",
+  version: "2.0.0",
   manifest_version: 3,
-  description:
-    "Monitor and display all XHR/fetch request URLs with complete details",
+  description: "Monitor and display all XHR/fetch request URLs with complete details",
   permissions: [
     "webRequest",
     "tabs",
     "storage",
     "clipboardWrite",
     "cookies",
+    "sidePanel",
   ],
   host_permissions: ["<all_urls>"],
   icons: {
@@ -25,12 +25,14 @@ const manifest = {
     "128": "icons/icon128.png",
   },
   action: {
-    default_popup: "src/popup/index.html",
     default_icon: {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png",
     },
+  },
+  side_panel: {
+    default_path: "src/sidepanel/index.html",
   },
   background: {
     service_worker: "src/background/index.ts",
@@ -42,26 +44,23 @@ const manifest = {
       js: ["src/content/index.ts"],
     },
   ],
-  web_accessible_resources: [
-    {
-      resources: ["src/inject/index.ts"],
-      matches: ["<all_urls>"],
-    },
-  ],
 };
 
 export default defineConfig({
   plugins: [
-    // @ts-ignore - Ignorer les erreurs de type pour le manifest
+    react(),
     webExtension({
       manifest: () => manifest,
       browser: "chrome",
-    }) as PluginOption,
+    }),
   ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@utils": path.resolve(__dirname, "./src/utils"),
+      "@components": path.resolve(__dirname, "./src/sidepanel/components"),
+      "@hooks": path.resolve(__dirname, "./src/sidepanel/hooks"),
+      "@lib": path.resolve(__dirname, "./src/sidepanel/lib"),
+      "@stores": path.resolve(__dirname, "./src/sidepanel/stores"),
     },
   },
 });
