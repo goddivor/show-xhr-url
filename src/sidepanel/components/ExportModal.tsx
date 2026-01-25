@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { X, Download, FileJson, Terminal, FileText } from 'lucide-react';
+import { X, Download, FileJson, Terminal, FileText, Send } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useFilteredRequests } from '../stores/requestStore';
 import { useTheme } from '../hooks/useTheme';
-import { exportAsJson, exportAsHar, exportAsCurl } from '../lib/export';
+import { exportAsJson, exportAsHar, exportAsCurl, exportAsPostman } from '../lib/export';
 import type { ExportFormat, ExportOptions } from '../types';
 
 interface ExportModalProps {
@@ -29,6 +29,12 @@ const EXPORT_OPTIONS: { format: ExportFormat; label: string; icon: React.ReactNo
     label: 'cURL',
     icon: <Terminal size={20} />,
     description: 'cURL commands',
+  },
+  {
+    format: 'postman',
+    label: 'Postman',
+    icon: <Send size={20} />,
+    description: 'Postman collection',
   },
 ];
 
@@ -57,6 +63,9 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         break;
       case 'curl':
         exportAsCurl(filteredRequests, options);
+        break;
+      case 'postman':
+        exportAsPostman(filteredRequests, options);
         break;
     }
 

@@ -117,6 +117,64 @@ export function exportAsCurl(requests: DetailedRequest[], options: ExportOptions
   downloadFile(content, `requests-${timestamp}.sh`, 'text/plain');
 }
 
+export function exportAsPostman(requests: DetailedRequest[], options: ExportOptions) {
+  const timestamp = new Date().toISOString().slice(0, 10);
+
+  const items = requests.map((req) => {
+    // Parse URL for query params
+    const queryParams: { key: string; value: string }[] = [];
+
+    try {
+      const urlObj = new URL(req.url);
+
+      urlObj.searchParams.forEach((value, key) => {
+        queryParams.push({ key, value });
+      });
+    } catch {
+      // Keep original URL if parsing fails
+    }
+
+    const headers: { key: string; value: string; type: string }[] = [];
+    if (options.includeHeaders && req.requestHeaders) {
+      Object.entries(req.requestHeaders).forEach(([key, value]) => {
+        // Skip some headers that Postman handles automatically
+        if (!['host', 'content-length', 'connection'].includes(key.toLowerCase())) {
+          headers.push({ key, value, type: 'text' });
+        }
+      });
+    }
+
+    return {
+      name: `${req.method} ${new URL(req.url).pathname}`,
+      request: {
+        method: req.method,
+        header: headers,
+        url: {
+          raw: req.url,
+          protocol: new URL(req.url).protocol.replace(':', ''),
+          host: new URL(req.url).hostname.split('.'),
+          path: new URL(req.url).pathname.split('/').filter(Boolean),
+          query: queryParams.length > 0 ? queryParams : undefined,
+        },
+      },
+      response: [],
+    };
+  });
+
+  const collection = {
+    info: {
+      _postman_id: crypto.randomUUID(),
+      name: `ShowXhrUrl Export - ${timestamp}`,
+      description: `Exported ${requests.length} requests from ShowXhrUrl`,
+      schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
+    },
+    item: items,
+  };
+
+  const json = JSON.stringify(collection, null, 2);
+  downloadFile(json, `postman-collection-${timestamp}.json`, 'application/json');
+}
+
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
