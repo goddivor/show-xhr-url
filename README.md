@@ -6,124 +6,119 @@
 <div align="center">
 <a href="">
     <img src="public/screenshot/friendly_screenshot.png" alt="ShowXhr" title="ShowXhr"/>
-</a> 
+</a>
 </div>
 
 </div>
 
-```markdown
-**Dépôt GitHub** : https://github.com/goddivor/show-xhr-url
+**GitHub Repository**: https://github.com/goddivor/show-xhr-url
 
-Cette extension Chrome liste toutes les requêtes XHR du navigateur, triées par type (GET, POST, PUT, DELETE, etc.), et fournit une interface popup pour visualiser et filtrer ces appels en temps réel.
-```
+This Chrome extension lists all XHR requests from the browser, sorted by type (GET, POST, PUT, DELETE, etc.), and provides a popup interface to visualize and filter these calls in real-time.
 
-## 📁 Structure du projet
+## Project Structure
 
 ```
-📁 .
-│   📁 public
-│   │   📁 icons
-│   │   │   📄 Icon OR.png
-│   │   │   📄 icon128.png
-│   │   │   📄 icon16.png
-│   │   │   📄 icon48.png
-│   │   📄 vite.svg
-│   📁 src
-│   │   📁 background
-│   │   │   📄 index.ts
-│   │   📁 content
-│   │   │   📄 index.ts
-│   │   📁 popup
-│   │   │   📄 index.html
-│   │   │   📄 index.ts
-│   │   📁 types
-│   │   │   📄 axios.d.ts
-│   │   📁 utils
-│   │   │   📄 browser.ts
-│   │   │   📄 cookies.ts
-│   │   │   📄 index.ts
-│   │   📄 counter.ts
-│   │   📄 main.ts
-│   │   📄 style.css
-│   │   📄 typescript.svg
-│   │   📄 vite-env.d.ts
-│   📄 .gitignore
-│   📄 .hintrc
-│   📄 index.html
-│   📄 manifest.json
-│   📄 package-lock.json
-│   📄 package.json
-│   📄 README.md
-│   📄 tsconfig.json
-│   📄 vite.config.ts
+.
+├── public/
+│   └── icons/
+│       ├── Icon OR.png
+│       ├── icon128.png
+│       ├── icon16.png
+│       └── icon48.png
+├── src/
+│   ├── background/
+│   │   └── index.ts
+│   ├── content/
+│   │   └── index.ts
+│   ├── popup/
+│   │   ├── index.html
+│   │   └── index.ts
+│   ├── types/
+│   │   └── axios.d.ts
+│   └── utils/
+│       ├── browser.ts
+│       ├── cookies.ts
+│       └── index.ts
+├── manifest.json
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
 ```
 
-## 🚀 Prérequis
+## Prerequisites
 
 - Node.js (>= 14)
 - npm (>= 6)
-- N'importe quel navigateur
+- Any Chromium-based browser
 
-## 🔧 Installation
+## Installation
 
-1. Cloner le dépôt :
+1. Clone the repository:
 
-```
-   git clone https://github.com/goddivor/show-xhr-url.git
-   cd show-xhr-url
-```
-
-## 🔧 Installation
-
-2. Renommer le fichier .env.example en .env et le replir comme suit :
-
-```
-    VITE_CHATGPT_API_KEY=Votre Clé API ChatGpt 
-    VITE_CHATGPT_SPECIAL_PROMPT=Votre Prompt pour stringified le Json
-    VITE_OPENAI_API_URL=L'Url de l'API de OpenAI 
-    VITE_OPENAI_MODEL=Le type de model
-    VITE_OPENAI_MAX_TOKENS=Token maximal
-    VITE_OPENAI_TEMPERATURE=Température
+```bash
+git clone https://github.com/goddivor/show-xhr-url.git
+cd show-xhr-url
 ```
 
-3. Installer les dépendances :
+2. Rename `.env.example` to `.env` and fill it as follows:
 
-   ```bash
-   npm install
-   ```
+```
+VITE_CHATGPT_API_KEY=Your ChatGPT API Key
+VITE_CHATGPT_SPECIAL_PROMPT=Your prompt for JSON stringification
+VITE_OPENAI_API_URL=OpenAI API URL
+VITE_OPENAI_MODEL=Model type
+VITE_OPENAI_MAX_TOKENS=Maximum tokens
+VITE_OPENAI_TEMPERATURE=Temperature
+```
 
-## ⚙️ Développement
+3. Install dependencies:
 
-Pour lancer l’extension en mode développeur avec rechargement à chaud :
+```bash
+npm install
+```
+
+## Development
+
+To run the extension in developer mode with hot reload:
 
 ```bash
 npm run dev
 ```
 
-Le dossier `dist/` sera mis à jour automatiquement à chaque modification.
+The `dist/` folder will be automatically updated on each modification.
 
-## 📦 Build
+## Build
 
-Pour générer la version de production :
+To generate the production version:
 
 ```bash
 npm run build
 ```
 
-Les fichiers optimisés seront disponibles dans `dist/`.
+Optimized files will be available in `dist/`.
 
-## 🔎 Charger l’extension dans Chrome
+## Load Extension in Chrome
 
-1. Ouvrez `chrome://extensions/` dans votre navigateur.
-2. Activez le **Mode développeur** en haut à droite.
-3. Cliquez sur **Charger l’extension non empaquetée**.
-4. Sélectionnez le dossier `dist/`.
-5. Vérifiez que l’icône et la popup fonctionnent correctement.
+1. Open `chrome://extensions/` in your browser.
+2. Enable **Developer mode** in the top right corner.
+3. Click **Load unpacked**.
+4. Select the `dist/` folder.
+5. Verify that the icon and popup work correctly.
 
-## 🤝 Contribution
+## Features
 
-Les contributions sont les bienvenues ! Ouvrez une issue ou soumettez un pull request.
+- Real-time monitoring of all XHR/fetch requests
+- Filter requests by HTTP method (GET, POST, PUT, DELETE, etc.)
+- Search through captured requests
+- View request/response headers
+- Copy request URLs to clipboard
+- Re-execute GET requests with CSRF token support
+- JSON response simplification via ChatGPT integration (optional)
 
----
+## Contributing
 
-_Développé avec ❤️ par l’équipe XHR Request Monitor Mdr 😂._
+Contributions are welcome! Open an issue or submit a pull request.
+
+## License
+
+MIT

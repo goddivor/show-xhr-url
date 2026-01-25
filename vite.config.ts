@@ -10,15 +10,13 @@ const manifest = {
   version: "1.0.0",
   manifest_version: 3,
   description:
-    "Affiche tous les URLs des requêtes fetch/XHR avec détails complets",
+    "Monitor and display all XHR/fetch request URLs with complete details",
   permissions: [
     "webRequest",
     "tabs",
     "storage",
     "clipboardWrite",
     "cookies",
-    "http://*/*",
-    "https://*/*",
   ],
   host_permissions: ["<all_urls>"],
   icons: {
