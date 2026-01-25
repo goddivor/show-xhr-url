@@ -26,6 +26,17 @@ const CONTENT_TYPE_OPTIONS = [
   { value: 'font', label: 'Font' },
 ];
 
+const REQUEST_TYPE_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: 'xmlhttprequest', label: 'XHR' },
+  { value: 'fetch', label: 'Fetch' },
+  { value: 'document', label: 'Document' },
+  { value: 'script', label: 'Script' },
+  { value: 'stylesheet', label: 'Stylesheet' },
+  { value: 'image', label: 'Image' },
+  { value: 'font', label: 'Font' },
+];
+
 export function FilterPanel({ isOpen, onClose }: FilterPanelProps) {
   const { filters, setFilters } = useRequestStore();
   const { isDark } = useTheme();
@@ -37,10 +48,11 @@ export function FilterPanel({ isOpen, onClose }: FilterPanelProps) {
     setFilters({
       statusCode: '',
       contentType: '',
+      requestType: '',
     });
   };
 
-  const hasFilters = filters.statusCode || filters.contentType;
+  const hasFilters = filters.statusCode || filters.contentType || filters.requestType;
 
   return (
     <div className="filter-panel">
@@ -82,6 +94,21 @@ export function FilterPanel({ isOpen, onClose }: FilterPanelProps) {
             className="devtools-input"
           >
             {CONTENT_TYPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-panel-field">
+          <label>Request Type</label>
+          <select
+            value={filters.requestType}
+            onChange={(e) => setFilters({ requestType: e.target.value })}
+            className="devtools-input"
+          >
+            {REQUEST_TYPE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>

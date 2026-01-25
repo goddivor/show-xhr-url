@@ -24,6 +24,7 @@ export const useRequestStore = create<RequestState>((set) => ({
     search: '',
     statusCode: '',
     contentType: '',
+    requestType: '',
   },
   isLoading: false,
 
@@ -76,6 +77,13 @@ export const useFilteredRequests = () => {
     // Filter by content type
     if (filters.contentType) {
       if (!req.contentType?.toLowerCase().includes(filters.contentType.toLowerCase())) {
+        return false;
+      }
+    }
+
+    // Filter by request type (XHR, Fetch, etc.)
+    if (filters.requestType) {
+      if (req.requestType !== filters.requestType) {
         return false;
       }
     }
