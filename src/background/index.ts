@@ -1,6 +1,10 @@
 // src/background/index.ts
 import browser from '../utils/browser';
 
+// Enable side panel on action click
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+  .catch((error: Error) => console.error('Error setting side panel behavior:', error));
+
 // Interfaces pour les types
 interface DetailedRequest {
   url: string;
