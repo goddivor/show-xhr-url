@@ -7,6 +7,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
 
 // Interfaces pour les types
 interface DetailedRequest {
+  id: string;
   url: string;
   method: string;
   timestamp: number;
@@ -20,6 +21,29 @@ interface DetailedRequest {
   tabUrl?: string;
   referer?: string;
   origin?: string;
+}
+
+// Generate unique ID for requests
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
+// Broadcast updates to sidepanel
+function broadcastUpdate(tabId: number): void {
+  if (tabId <= 0) return;
+
+  const requests = detailedRequests[tabId] || [];
+
+  // Send message to all extension contexts (sidepanel, popup, etc.)
+  chrome.runtime.sendMessage({
+    type: 'UPDATE_REQUESTS',
+    payload: {
+      tabId,
+      requests,
+    },
+  }).catch(() => {
+    // Ignore errors when no listeners (sidepanel not open)
+  });
 }
 
 interface WebRequestDetails {
@@ -87,32 +111,37 @@ browser.webRequest.onBeforeRequest.addListener(
   function(details: WebRequestDetails): void {
     const tabId = details.tabId;
     if (tabId <= 0) return; // Ignorer les requêtes qui ne sont pas associées à un onglet
-    
-    // Créer un nouvel objet de requête
+
+    // Créer un nouvel objet de requête avec ID unique
     const requestData: DetailedRequest = {
+      id: generateId(),
       url: details.url,
       method: details.method,
       timestamp: Date.now(),
       tabId: tabId
     };
-    
+
     // Initialiser le tableau pour ce tab si nécessaire
     if (!detailedRequests[tabId]) {
       detailedRequests[tabId] = [];
     }
-    
+
     // Ajouter la requête
     detailedRequests[tabId].push(requestData);
-    
+
     // Récupérer l'URL de l'onglet
     browser.tabs.get(tabId).then((tab: Tab) => {
       if (tab.url) {
         requestData.tabUrl = tab.url;
       }
+      // Broadcast update after getting tab URL
+      broadcastUpdate(tabId);
     }).catch((error: Error) => {
       console.error('Erreur lors de la récupération de l\'URL de l\'onglet:', error);
+      // Still broadcast even on error
+      broadcastUpdate(tabId);
     });
-    
+
     // Mettre à jour le badge avec le nombre de requêtes
     const count = detailedRequests[tabId].length;
     browser.action.setBadgeText({
@@ -132,20 +161,23 @@ browser.webRequest.onSendHeaders.addListener(
   function(details: WebRequestHeadersDetails): void {
     const tabId = details.tabId;
     if (tabId <= 0) return;
-    
+
     // Trouver la requête correspondante
     const requests = detailedRequests[tabId] || [];
     const request = requests.find(req => req.url === details.url && !req.requestHeaders);
-    
+
     if (request) {
       request.requestHeaders = headersToObject(details.requestHeaders);
-      
+
       // Extraire spécifiquement les headers importants comme Origin et Referer
       if (request.requestHeaders) {
         const headers = request.requestHeaders;
         request.referer = headers['referer'] || headers['referrer'];
         request.origin = headers['origin'];
       }
+
+      // Broadcast update
+      broadcastUpdate(tabId);
     }
   },
   { urls: ["<all_urls>"] },
@@ -157,15 +189,15 @@ browser.webRequest.onHeadersReceived.addListener(
   function(details: WebRequestHeadersDetails): void {
     const tabId = details.tabId;
     if (tabId <= 0) return;
-    
+
     // Trouver la requête correspondante
     const requests = detailedRequests[tabId] || [];
     const request = requests.find(req => req.url === details.url && !req.responseHeaders);
-    
+
     if (request) {
       request.statusCode = details.statusCode;
       request.responseHeaders = headersToObject(details.responseHeaders);
-      
+
       // Extraire des informations spécifiques des headers
       const headers = request.responseHeaders;
       if (headers) {
@@ -174,6 +206,9 @@ browser.webRequest.onHeadersReceived.addListener(
           request.responseSize = parseInt(headers['content-length']);
         }
       }
+
+      // Broadcast update
+      broadcastUpdate(tabId);
     }
   },
   { urls: ["<all_urls>"] },
