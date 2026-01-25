@@ -54,6 +54,7 @@
     --text-secondary: #5f6368;
     --border-color: #dadce0;
     --accent-color: #1a73e8;
+    --shadow-color: rgba(0, 0, 0, 0.1);
   }
 
   .dark {
@@ -65,6 +66,16 @@
     --text-secondary: #9aa0a6;
     --border-color: #3c4043;
     --accent-color: #8ab4f8;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+  }
+
+  html {
+    background-color: var(--bg-primary);
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
@@ -112,6 +123,7 @@
     padding-right: 8px;
     border-bottom: 1px solid var(--border-color);
     font-size: 12px;
+    background-color: var(--bg-primary);
   }
 
   .devtools-row:hover {
@@ -119,7 +131,7 @@
   }
 
   .devtools-row-selected {
-    background-color: color-mix(in srgb, var(--accent-color) 10%, transparent);
+    background-color: color-mix(in srgb, var(--accent-color) 15%, var(--bg-primary));
   }
 
   .devtools-header {
@@ -147,7 +159,7 @@
     padding-left: 8px;
     padding-right: 8px;
     font-size: 12px;
-    background-color: transparent;
+    background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 0;
     color: var(--text-primary);
@@ -160,6 +172,27 @@
 
   .devtools-input::placeholder {
     color: var(--text-secondary);
+  }
+
+  /* Select dropdown styling */
+  select.devtools-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%235f6368' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 4px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 24px;
+    cursor: pointer;
+  }
+
+  .dark select.devtools-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239aa0a6' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  }
+
+  select.devtools-input option {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 8px;
   }
 
   .devtools-button {
@@ -468,6 +501,7 @@
   .request-list {
     flex: 1;
     overflow: auto;
+    background-color: var(--bg-primary);
   }
 
   .request-list-empty {
@@ -476,6 +510,7 @@
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
+    background-color: var(--bg-primary);
   }
 
   .request-list-empty-text {
@@ -529,6 +564,7 @@
   .request-details-content {
     max-height: 256px;
     overflow: auto;
+    background-color: var(--bg-primary);
   }
 
   .request-details-table {
@@ -634,6 +670,7 @@
 
   .modal-content {
     padding: 12px;
+    background-color: var(--bg-primary);
   }
 
   .modal-description {
@@ -657,7 +694,8 @@
     padding: 8px;
     text-align: left;
     border: 1px solid var(--border-color);
-    background: none;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     cursor: pointer;
     transition: background-color 0.1s;
   }
@@ -668,7 +706,7 @@
 
   .export-option.selected {
     border-color: var(--accent-color);
-    background-color: color-mix(in srgb, var(--accent-color) 5%, transparent);
+    background-color: color-mix(in srgb, var(--accent-color) 10%, var(--bg-primary));
   }
 
   .export-option-icon {
@@ -697,6 +735,7 @@
     margin-bottom: 16px;
     font-size: 11px;
     cursor: pointer;
+    color: var(--text-primary);
   }
 
   .export-checkbox input {
@@ -710,11 +749,17 @@
   }
 
   /* App layout */
+  #root {
+    background-color: var(--bg-primary);
+    min-height: 100vh;
+  }
+
   .app {
     display: flex;
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    background-color: var(--bg-primary);
   }
 
   .app-loading {
@@ -779,6 +824,7 @@
     flex: 1;
     overflow: auto;
     padding: 8px;
+    background-color: var(--bg-primary);
   }
 
   .response-body {
@@ -793,7 +839,7 @@
 
   .response-error {
     padding: 12px;
-    background-color: color-mix(in srgb, #ea4335 10%, transparent);
+    background-color: color-mix(in srgb, #ea4335 10%, var(--bg-primary));
     color: #ea4335;
     font-size: 11px;
   }
@@ -808,6 +854,7 @@
     gap: 16px;
     text-align: center;
     color: var(--text-secondary);
+    background-color: var(--bg-primary);
   }
 
   .simulate-placeholder p {
