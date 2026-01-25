@@ -8,11 +8,13 @@ export interface DetailedRequest {
   contentType?: string;
   requestHeaders?: Record<string, string>;
   responseHeaders?: Record<string, string>;
+  requestBody?: string;
   ip?: string;
   tabId: number;
   tabUrl?: string;
   referer?: string;
   origin?: string;
+  requestType?: 'xmlhttprequest' | 'fetch' | 'document' | 'script' | 'stylesheet' | 'image' | 'font' | 'other';
 }
 
 export interface RequestFilters {
@@ -20,11 +22,12 @@ export interface RequestFilters {
   search: string;
   statusCode: string;
   contentType: string;
+  requestType: string;
 }
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'HEAD';
 
-export type ExportFormat = 'json' | 'har' | 'curl';
+export type ExportFormat = 'json' | 'har' | 'curl' | 'postman';
 
 export interface ExportOptions {
   format: ExportFormat;
