@@ -1,119 +1,123 @@
 <div align="center">
-<a href="">
-    <img src="public/icons/Icon%20OR.png" alt="ShowXhr" title="ShowXhr" width="100"/>
-</a>
+
+<img src="public/icons/Icon%20OR.png" alt="ShowXhrUrl" title="ShowXhrUrl" width="100"/>
+
+# ShowXhrUrl v2
+
+**A Chrome DevTools-style network request monitor**
+
+Monitor, filter, simulate and export HTTP requests in real-time from any webpage.
+
+[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Screenshots](#screenshots)
+
+</div>
+
+---
+
+## Features
+
+- **Side Panel Interface** - DevTools-inspired design that stays open while browsing
+- **Real-time Monitoring** - Capture all XHR, Fetch, and network requests instantly
+- **Request Simulation** - Re-execute any captured request and view the response
+- **Dark/Light Theme** - System preference detection with manual toggle
+- **Advanced Filters** - Filter by method, status code, content type, request type
+- **Multiple Export Formats** - JSON, HAR, cURL commands, Postman collections
+- **Request Details** - View headers, request body, and response data
+
+## Screenshots
 
 <div align="center">
-<a href="">
-    <img src="public/screenshot/friendly_screenshot.png" alt="ShowXhr" title="ShowXhr"/>
-</a>
-</div>
+
+### Dark Theme
+<img src="screenshot/sidepanel-dark-theme.png" alt="Dark Theme" width="400"/>
+
+### Light Theme
+<img src="screenshot/sidepanel-light-theme.png" alt="Light Theme" width="400"/>
+
+### Request Details & Simulation
+<img src="screenshot/request-details.png" alt="Request Details" width="400"/>
+
+### Export Options
+<img src="screenshot/export-modal.png" alt="Export Modal" width="400"/>
 
 </div>
-
-**GitHub Repository**: https://github.com/goddivor/show-xhr-url
-
-This Chrome extension lists all XHR requests from the browser, sorted by type (GET, POST, PUT, DELETE, etc.), and provides a popup interface to visualize and filter these calls in real-time.
-
-## Project Structure
-
-```
-.
-├── public/
-│   └── icons/
-│       ├── Icon OR.png
-│       ├── icon128.png
-│       ├── icon16.png
-│       └── icon48.png
-├── src/
-│   ├── background/
-│   │   └── index.ts
-│   ├── content/
-│   │   └── index.ts
-│   ├── popup/
-│   │   ├── index.html
-│   │   └── index.ts
-│   ├── types/
-│   │   └── axios.d.ts
-│   └── utils/
-│       ├── browser.ts
-│       ├── cookies.ts
-│       └── index.ts
-├── manifest.json
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
-```
-
-## Prerequisites
-
-- Node.js (>= 14)
-- npm (>= 6)
-- Any Chromium-based browser
 
 ## Installation
 
-1. Clone the repository:
+### From Source
 
+1. Clone the repository:
 ```bash
 git clone https://github.com/goddivor/show-xhr-url.git
 cd show-xhr-url
+git checkout v2
 ```
 
-2. Rename `.env.example` to `.env` and fill it as follows:
-
-```
-VITE_CHATGPT_API_KEY=Your ChatGPT API Key
-VITE_CHATGPT_SPECIAL_PROMPT=Your prompt for JSON stringification
-VITE_OPENAI_API_URL=OpenAI API URL
-VITE_OPENAI_MODEL=Model type
-VITE_OPENAI_MAX_TOKENS=Maximum tokens
-VITE_OPENAI_TEMPERATURE=Temperature
-```
-
-3. Install dependencies:
-
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-## Development
-
-To run the extension in developer mode with hot reload:
-
-```bash
-npm run dev
-```
-
-The `dist/` folder will be automatically updated on each modification.
-
-## Build
-
-To generate the production version:
-
+3. Build the extension:
 ```bash
 npm run build
 ```
 
-Optimized files will be available in `dist/`.
+4. Load in Chrome:
+   - Open `chrome://extensions/`
+   - Enable **Developer mode**
+   - Click **Load unpacked**
+   - Select the `dist/` folder
 
-## Load Extension in Chrome
+## Usage
 
-1. Open `chrome://extensions/` in your browser.
-2. Enable **Developer mode** in the top right corner.
-3. Click **Load unpacked**.
-4. Select the `dist/` folder.
-5. Verify that the icon and popup work correctly.
+1. Click the extension icon to open the side panel
+2. Browse any website - requests will appear automatically
+3. Use filters to narrow down requests (method, status, type)
+4. Click any request to view details
+5. Click **Fetch** to simulate/re-execute the request
+6. Export requests using the download button
 
-## Features
+### Keyboard Shortcuts
 
-- Real-time monitoring of all XHR/fetch requests
-- Filter requests by HTTP method (GET, POST, PUT, DELETE, etc.)
-- Search through captured requests
-- View request/response headers
-- Copy request URLs to clipboard
-- Re-execute GET requests with CSRF token support
-- JSON response simplification via ChatGPT integration (optional)
+- Click extension icon → Opens side panel
+- Theme toggle → Top right corner
+
+## Tech Stack
+
+- **Framework**: React 18 + TypeScript
+- **Styling**: Tailwind CSS v4
+- **State**: Zustand
+- **Build**: Vite + vite-plugin-web-extension
+- **Icons**: Lucide React
+
+## Project Structure
+
+```
+src/
+├── background/          # Service worker for request capture
+├── sidepanel/           # React application
+│   ├── components/      # UI components
+│   ├── hooks/           # Custom React hooks
+│   ├── stores/          # Zustand state management
+│   ├── lib/             # Utilities (export, simulation)
+│   └── styles/          # Global CSS
+├── content/             # Content script
+└── utils/               # Shared utilities
+```
+
+## Development
+
+```bash
+# Development mode with hot reload
+npm run dev
+
+# Production build
+npm run build
+
+# Type checking
+npm run typecheck
+```
 
 ## Contributing
 
@@ -122,3 +126,11 @@ Contributions are welcome! Open an issue or submit a pull request.
 ## License
 
 MIT
+
+---
+
+<div align="center">
+
+**[GitHub Repository](https://github.com/goddivor/show-xhr-url)**
+
+</div>
