@@ -16,11 +16,13 @@ interface DetailedRequest {
   contentType?: string;
   requestHeaders?: Record<string, string>;
   responseHeaders?: Record<string, string>;
+  requestBody?: string;
   ip?: string;
   tabId: number;
   tabUrl?: string;
   referer?: string;
   origin?: string;
+  requestType?: string;
 }
 
 // Generate unique ID for requests
@@ -55,6 +57,10 @@ interface WebRequestDetails {
   type: string;
   frameId: number;
   parentFrameId: number;
+  requestBody?: {
+    raw?: { bytes: ArrayBuffer }[];
+    formData?: Record<string, string[]>;
+  };
 }
 
 interface WebRequestHeadersDetails extends WebRequestDetails {
@@ -105,6 +111,38 @@ function headersToObject(headers: {name: string; value: string}[] | undefined): 
   return result;
 }
 
+// Helper to extract request body
+function extractRequestBody(details: WebRequestDetails): string | undefined {
+  if (!details.requestBody) return undefined;
+
+  // Handle form data
+  if (details.requestBody.formData) {
+    const formData: Record<string, string> = {};
+    for (const [key, values] of Object.entries(details.requestBody.formData)) {
+      formData[key] = values.join(', ');
+    }
+    return JSON.stringify(formData);
+  }
+
+  // Handle raw data
+  if (details.requestBody.raw && details.requestBody.raw.length > 0) {
+    try {
+      const decoder = new TextDecoder('utf-8');
+      const rawData = details.requestBody.raw.map(item => {
+        if (item.bytes) {
+          return decoder.decode(item.bytes);
+        }
+        return '';
+      }).join('');
+      return rawData;
+    } catch {
+      return '[Binary data]';
+    }
+  }
+
+  return undefined;
+}
+
 // Utiliser l'API webRequest de manière compatible avec Manifest V3
 // Pour capturer les requêtes sans les bloquer
 browser.webRequest.onBeforeRequest.addListener(
@@ -118,7 +156,9 @@ browser.webRequest.onBeforeRequest.addListener(
       url: details.url,
       method: details.method,
       timestamp: Date.now(),
-      tabId: tabId
+      tabId: tabId,
+      requestType: details.type as DetailedRequest['requestType'],
+      requestBody: extractRequestBody(details),
     };
 
     // Initialiser le tableau pour ce tab si nécessaire
@@ -153,7 +193,8 @@ browser.webRequest.onBeforeRequest.addListener(
       tabId
     });
   },
-  { urls: ["<all_urls>"] }
+  { urls: ["<all_urls>"] },
+  ["requestBody"]
 );
 
 // Capturer les headers de requête
