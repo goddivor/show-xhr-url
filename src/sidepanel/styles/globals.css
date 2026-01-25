@@ -725,4 +725,124 @@
     font-size: 11px;
     color: var(--text-secondary);
   }
+
+  /* Response Viewer */
+  .response-viewer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .response-viewer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+  }
+
+  .response-viewer-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .response-status-badge {
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .response-status-badge.status-success {
+    background-color: color-mix(in srgb, #34a853 20%, transparent);
+    color: #34a853;
+  }
+
+  .response-status-badge.status-error {
+    background-color: color-mix(in srgb, #ea4335 20%, transparent);
+    color: #ea4335;
+  }
+
+  .response-duration {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .response-viewer-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .response-viewer-content {
+    flex: 1;
+    overflow: auto;
+    padding: 8px;
+  }
+
+  .response-body {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--text-primary);
+  }
+
+  .response-error {
+    padding: 12px;
+    background-color: color-mix(in srgb, #ea4335 10%, transparent);
+    color: #ea4335;
+    font-size: 11px;
+  }
+
+  /* Simulate placeholder */
+  .simulate-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    gap: 16px;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+
+  .simulate-placeholder p {
+    margin: 0;
+    font-size: 12px;
+  }
+
+  /* Animation for spinner */
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  /* Status badges in request list */
+  .status-success {
+    color: #34a853;
+  }
+
+  .status-warning {
+    color: #fbbc04;
+  }
+
+  .status-error {
+    color: #ea4335;
+  }
+
+  .status-pending {
+    color: var(--text-secondary);
+  }
 }
