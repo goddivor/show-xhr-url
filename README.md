@@ -28,17 +28,28 @@ Monitor, filter, simulate and export HTTP requests in real-time from any webpage
 
 <div align="center">
 
-### Dark Theme
+<table>
+<tr>
+<td align="center">
+<strong>Dark Theme</strong><br/>
 <img src="screenshot/sidepanel-dark-theme.png" alt="Dark Theme" width="400"/>
-
-### Light Theme
+</td>
+<td align="center">
+<strong>Light Theme</strong><br/>
 <img src="screenshot/sidepanel-light-theme.png" alt="Light Theme" width="400"/>
-
-### Request Details & Simulation
+</td>
+</tr>
+<tr>
+<td align="center">
+<strong>Request Details &amp; Simulation</strong><br/>
 <img src="screenshot/request-details.png" alt="Request Details" width="400"/>
-
-### Export Options
+</td>
+<td align="center">
+<strong>Export Options</strong><br/>
 <img src="screenshot/export-modal.png" alt="Export Modal" width="400"/>
+</td>
+</tr>
+</table>
 
 </div>
 
@@ -126,11 +137,3 @@ Contributions are welcome! Open an issue or submit a pull request.
 ## License
 
 MIT
-
----
-
-<div align="center">
-
-**[GitHub Repository](https://github.com/goddivor/show-xhr-url)**
-
-</div>
