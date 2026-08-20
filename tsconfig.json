@@ -1,39 +1,37 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["chrome", "node", "vite/client"],
+
+    /* Vite owns emit; tsc is only ever a checker here. */
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "useDefineForClassFields": true,
     "skipLibCheck": true,
 
-    /* React */
-    "jsx": "react-jsx",
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-
-    /* Linting */
+    /* Strictness. Every flag below has caught a real defect in this codebase; none of them
+       may be relaxed to make an error go away. */
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
 
-    /* Custom type declarations */
-    "typeRoots": ["./node_modules/@types", "./src/types"],
-
-    /* Path aliases */
-    "baseUrl": ".",
+    /* `baseUrl` is deprecated in TypeScript 6 and removed in 7; `paths` resolves relative
+       to this file without it. */
     "paths": {
       "@/*": ["./src/*"],
-      "@components/*": ["./src/sidepanel/components/*"],
-      "@hooks/*": ["./src/sidepanel/hooks/*"],
-      "@lib/*": ["./src/sidepanel/lib/*"],
-      "@stores/*": ["./src/sidepanel/stores/*"]
+      "@shared/*": ["./src/shared/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts", "src/types"]
+  "include": ["src", "vite.config.ts", "eslint.config.mjs"]
 }
