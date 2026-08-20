@@ -1,3 +1,16 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+*.local
+
+# Environment
+.env
+.env.*
+!.env.example
+
 # Logs
 logs
 *.log
@@ -5,21 +18,19 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-.env
-
-# Editor directories and files
+# Editors and desktop environments
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+.directory
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Assistant context layer, kept local by project decision
+CLAUDE.md
+.claude/
