@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Custom theme configuration */
 @theme {
@@ -38,7 +38,9 @@
   --color-method-head: #9c27b0;
 
   /* Typography */
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
 
   /* Spacing */
   --spacing-row: 28px;

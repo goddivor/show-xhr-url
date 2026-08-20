@@ -30,15 +30,17 @@ export const useRequestStore = create<RequestState>((set) => ({
 
   setRequests: (requests) => set({ requests }),
 
-  addRequest: (request) => set((state) => ({
-    requests: [request, ...state.requests],
-  })),
+  addRequest: (request) =>
+    set((state) => ({
+      requests: [request, ...state.requests],
+    })),
 
   selectRequest: (request) => set({ selectedRequest: request }),
 
-  setFilters: (filters) => set((state) => ({
-    filters: { ...state.filters, ...filters },
-  })),
+  setFilters: (filters) =>
+    set((state) => ({
+      filters: { ...state.filters, ...filters },
+    })),
 
   clearRequests: () => set({ requests: [], selectedRequest: null }),
 
@@ -81,9 +83,14 @@ export const useFilteredRequests = () => {
       }
     }
 
-    // Filter by request type (XHR, Fetch, etc.)
+    // Filter by request type. `fetch` and `xhr` are not resource types: the browser
+    // reports both as `xmlhttprequest`, so they are matched against the page-hook label.
     if (filters.requestType) {
-      if (req.requestType !== filters.requestType) {
+      const matchesInitiator =
+        (filters.requestType === 'fetch' || filters.requestType === 'xhr') &&
+        req.initiator === filters.requestType;
+
+      if (!matchesInitiator && req.requestType !== filters.requestType) {
         return false;
       }
     }

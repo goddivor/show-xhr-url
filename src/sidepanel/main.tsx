@@ -1,20 +1,30 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles/globals.css';
 
-// Initialize theme from storage or system preference
-const initTheme = () => {
+/**
+ * Paints the stored theme before React mounts. Deferring this to a hook would show one
+ * frame of the wrong palette on every open, which is very visible in a docked panel.
+ */
+function applyStoredTheme(): void {
   const stored = localStorage.getItem('theme');
-  if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  if (stored === 'dark' || (stored !== 'light' && prefersDark)) {
     document.documentElement.classList.add('dark');
   }
-};
+}
 
-initTheme();
+applyStoredTheme();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+const container = document.getElementById('root');
+if (!container) {
+  throw new Error('Missing #root in the side panel document.');
+}
+
+createRoot(container).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>
+  </StrictMode>,
 );

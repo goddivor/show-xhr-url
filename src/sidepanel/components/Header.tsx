@@ -2,6 +2,7 @@ import { Moon, Sun, Trash2, Download } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useTheme } from '../hooks/useTheme';
 import { useRequestStore } from '../stores/requestStore';
+import { clearRequestsEverywhere } from '../lib/requestActions';
 
 interface HeaderProps {
   onExport: () => void;
@@ -9,7 +10,11 @@ interface HeaderProps {
 
 export function Header({ onExport }: HeaderProps) {
   const { toggleTheme, isDark } = useTheme();
-  const { requests, clearRequests } = useRequestStore();
+  const requests = useRequestStore((state) => state.requests);
+  const clearRequests = useRequestStore((state) => state.clearRequests);
+
+  // Clearing only the store would let the next broadcast restore everything.
+  const handleClear = () => void clearRequestsEverywhere(clearRequests);
 
   const iconColor = isDark ? '#9aa0a6' : '#5f6368';
 
@@ -34,7 +39,7 @@ export function Header({ onExport }: HeaderProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={clearRequests}
+          onClick={handleClear}
           title="Clear requests"
           disabled={requests.length === 0}
         >
@@ -47,11 +52,7 @@ export function Header({ onExport }: HeaderProps) {
           onClick={toggleTheme}
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {isDark ? (
-            <Sun size={14} color="#9aa0a6" />
-          ) : (
-            <Moon size={14} color="#5f6368" />
-          )}
+          {isDark ? <Sun size={14} color="#9aa0a6" /> : <Moon size={14} color="#5f6368" />}
         </Button>
       </div>
     </header>

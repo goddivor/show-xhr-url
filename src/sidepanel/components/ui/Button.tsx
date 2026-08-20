@@ -7,7 +7,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className = '', variant = 'default', size = 'md', active = false, children, ...props }, ref) => {
+  (
+    { className = '', variant = 'default', size = 'md', active = false, children, ...props },
+    ref,
+  ) => {
     const baseStyles = 'devtools-button';
 
     const variants: Record<string, string> = {
@@ -32,7 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {children}
       </button>
     );
-  }
+  },
 );
 
 Button.displayName = 'Button';

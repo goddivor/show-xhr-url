@@ -19,9 +19,12 @@ export function RequestList() {
     overscan: 10,
   });
 
-  const handleSelect = useCallback((request: DetailedRequest) => {
-    selectRequest(selectedRequest?.id === request.id ? null : request);
-  }, [selectRequest, selectedRequest?.id]);
+  const handleSelect = useCallback(
+    (request: DetailedRequest) => {
+      selectRequest(selectedRequest?.id === request.id ? null : request);
+    },
+    [selectRequest, selectedRequest?.id],
+  );
 
   if (sortedRequests.length === 0) {
     return (
@@ -45,6 +48,9 @@ export function RequestList() {
       >
         {virtualizer.getVirtualItems().map((virtualItem) => {
           const request = sortedRequests[virtualItem.index];
+          // The virtualiser can measure one frame ahead of a list that just shrank.
+          if (!request) return null;
+
           return (
             <div
               key={request.id}

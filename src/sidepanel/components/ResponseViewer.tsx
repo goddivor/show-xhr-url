@@ -47,28 +47,20 @@ export function ResponseViewer({ result, onClose }: ResponseViewerProps) {
     { id: 'headers', label: 'Headers' },
   ];
 
-  const statusClass = result.success
-    ? 'status-success'
-    : 'status-error';
+  const statusClass = result.success ? 'status-success' : 'status-error';
 
   return (
     <div className="response-viewer">
       <div className="response-viewer-header">
         <div className="response-viewer-status">
           <span className={`response-status-badge ${statusClass}`}>
-            {result.status || 'Error'} {result.statusText || ''}
+            {result.status ?? 'Error'} {result.statusText ?? ''}
           </span>
-          {result.duration && (
-            <span className="response-duration">{result.duration}ms</span>
-          )}
+          {result.duration && <span className="response-duration">{result.duration}ms</span>}
         </div>
         <div className="response-viewer-actions">
-          <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy response">
-            {copied ? (
-              <Check size={14} color="#34a853" />
-            ) : (
-              <Copy size={14} color={iconColor} />
-            )}
+          <Button variant="ghost" size="sm" onClick={() => void handleCopy()} title="Copy response">
+            {copied ? <Check size={14} color="#34a853" /> : <Copy size={14} color={iconColor} />}
           </Button>
           <Button variant="ghost" size="sm" onClick={handleDownload} title="Download JSON">
             <Download size={14} color={iconColor} />
@@ -98,9 +90,7 @@ export function ResponseViewer({ result, onClose }: ResponseViewerProps) {
           </div>
         ) : (
           <>
-            {activeTab === 'body' && (
-              <pre className="response-body">{formattedData}</pre>
-            )}
+            {activeTab === 'body' && <pre className="response-body">{formattedData}</pre>}
             {activeTab === 'headers' && result.headers && (
               <div className="request-details-table">
                 {Object.entries(result.headers).map(([key, value]) => (

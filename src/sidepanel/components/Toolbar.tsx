@@ -31,11 +31,7 @@ export function Toolbar({ onOpenFilters }: ToolbarProps) {
           />
         </div>
         {filters.search && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setFilters({ search: '' })}
-          >
+          <Button variant="ghost" size="sm" onClick={() => setFilters({ search: '' })}>
             <X size={14} color={iconColor} />
           </Button>
         )}

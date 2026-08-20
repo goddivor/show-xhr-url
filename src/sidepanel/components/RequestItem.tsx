@@ -69,13 +69,9 @@ export const RequestItem = memo(function RequestItem({
         <span className="request-domain">{domain}</span>
       </div>
 
-      <div className="request-size">
-        {formatSize(request.responseSize)}
-      </div>
+      <div className="request-size">{formatSize(request.responseSize)}</div>
 
-      <div className="request-time">
-        {formatTime(request.timestamp)}
-      </div>
+      <div className="request-time">{formatTime(request.timestamp)}</div>
     </div>
   );
 });

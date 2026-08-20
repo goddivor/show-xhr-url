@@ -11,7 +11,12 @@ interface ExportModalProps {
   onClose: () => void;
 }
 
-const EXPORT_OPTIONS: { format: ExportFormat; label: string; icon: React.ReactNode; description: string }[] = [
+const EXPORT_OPTIONS: {
+  format: ExportFormat;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}[] = [
   {
     format: 'json',
     label: 'JSON',
@@ -83,9 +88,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         </div>
 
         <div className="modal-content">
-          <p className="modal-description">
-            Export {filteredRequests.length} requests
-          </p>
+          <p className="modal-description">Export {filteredRequests.length} requests</p>
 
           <div className="export-options">
             {EXPORT_OPTIONS.map((option) => (

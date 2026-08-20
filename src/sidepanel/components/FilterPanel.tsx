@@ -28,8 +28,9 @@ const CONTENT_TYPE_OPTIONS = [
 
 const REQUEST_TYPE_OPTIONS = [
   { value: '', label: 'All' },
-  { value: 'xmlhttprequest', label: 'XHR' },
-  { value: 'fetch', label: 'Fetch' },
+  { value: 'xmlhttprequest', label: 'XHR / Fetch' },
+  { value: 'xhr', label: 'XMLHttpRequest only' },
+  { value: 'fetch', label: 'fetch() only' },
   { value: 'document', label: 'Document' },
   { value: 'script', label: 'Script' },
   { value: 'stylesheet', label: 'Stylesheet' },

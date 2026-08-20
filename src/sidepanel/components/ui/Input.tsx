@@ -10,23 +10,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       return (
         <div className="input-wrapper">
           <span className="input-icon">{icon}</span>
-          <input
-            ref={ref}
-            className={`devtools-input input-with-icon ${className}`}
-            {...props}
-          />
+          <input ref={ref} className={`devtools-input input-with-icon ${className}`} {...props} />
         </div>
       );
     }
 
-    return (
-      <input
-        ref={ref}
-        className={`devtools-input ${className}`}
-        {...props}
-      />
-    );
-  }
+    return <input ref={ref} className={`devtools-input ${className}`} {...props} />;
+  },
 );
 
 Input.displayName = 'Input';

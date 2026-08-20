@@ -1,36 +1,13 @@
-export interface DetailedRequest {
-  id: string;
-  url: string;
-  method: string;
-  timestamp: number;
-  statusCode?: number;
-  responseSize?: number;
-  contentType?: string;
-  requestHeaders?: Record<string, string>;
-  responseHeaders?: Record<string, string>;
-  requestBody?: string;
-  ip?: string;
-  tabId: number;
-  tabUrl?: string;
-  referer?: string;
-  origin?: string;
-  requestType?: 'xmlhttprequest' | 'fetch' | 'document' | 'script' | 'stylesheet' | 'image' | 'font' | 'other';
-}
-
-export interface RequestFilters {
-  method: string;
-  search: string;
-  statusCode: string;
-  contentType: string;
-  requestType: string;
-}
-
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'HEAD';
-
-export type ExportFormat = 'json' | 'har' | 'curl' | 'postman';
-
-export interface ExportOptions {
-  format: ExportFormat;
-  includeHeaders: boolean;
-  includeBody: boolean;
-}
+/**
+ * The side panel speaks the shared vocabulary. This file exists so panel modules can keep
+ * importing `../types` while the definitions stay in one place for all three contexts.
+ */
+export type {
+  DetailedRequest,
+  ExportFormat,
+  ExportOptions,
+  HttpMethod,
+  RequestFilters,
+  RequestStatus,
+  RequestType,
+} from '@shared/types';

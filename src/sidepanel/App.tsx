@@ -5,16 +5,16 @@ import { RequestList } from './components/RequestList';
 import { RequestDetails } from './components/RequestDetails';
 import { FilterPanel } from './components/FilterPanel';
 import { ExportModal } from './components/ExportModal';
-import { useRequests } from './hooks/useRequests';
+import { useRequestSync } from './hooks/useRequestSync';
 import { useRequestStore } from './stores/requestStore';
 
 export default function App() {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const { isLoading } = useRequestStore();
+  const isLoading = useRequestStore((state) => state.isLoading);
 
-  // Initialize request fetching and listeners
-  useRequests();
+  // Mounted once: owns the chrome listeners that feed the store.
+  useRequestSync();
 
   return (
     <div className="app">
@@ -22,11 +22,7 @@ export default function App() {
       <Toolbar onOpenFilters={() => setIsFilterPanelOpen(!isFilterPanelOpen)} />
       <FilterPanel isOpen={isFilterPanelOpen} onClose={() => setIsFilterPanelOpen(false)} />
 
-      {isLoading ? (
-        <div className="app-loading">Loading requests...</div>
-      ) : (
-        <RequestList />
-      )}
+      {isLoading ? <div className="app-loading">Loading requests...</div> : <RequestList />}
 
       <RequestDetails />
       <ExportModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} />

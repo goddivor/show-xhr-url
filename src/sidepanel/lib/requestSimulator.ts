@@ -44,7 +44,10 @@ export function cancelSimulation(): void {
 }
 
 // Simulate a request with timeout
-export async function simulateRequest(request: DetailedRequest, timeoutMs = 30000): Promise<SimulationResult> {
+export async function simulateRequest(
+  request: DetailedRequest,
+  timeoutMs = 30000,
+): Promise<SimulationResult> {
   // Cancel any ongoing request
   cancelSimulation();
 
@@ -60,7 +63,7 @@ export async function simulateRequest(request: DetailedRequest, timeoutMs = 3000
   try {
     // Build headers
     const headers: Record<string, string> = {
-      'Accept': 'application/json, text/plain, */*',
+      Accept: 'application/json, text/plain, */*',
     };
 
     // Add CSRF token if present
@@ -111,7 +114,7 @@ export async function simulateRequest(request: DetailedRequest, timeoutMs = 3000
 
     // Try to parse response as JSON, fallback to text
     let data: unknown;
-    const contentType = response.headers.get('content-type') || '';
+    const contentType = response.headers.get('content-type') ?? '';
 
     if (contentType.includes('application/json')) {
       try {
@@ -155,12 +158,12 @@ export async function simulateRequest(request: DetailedRequest, timeoutMs = 3000
   }
 }
 
-// Format response data for display
+/** Pretty-prints a response for the viewer, re-indenting JSON that arrived as text. */
 export function formatResponseData(data: unknown): string {
   if (typeof data === 'string') {
-    // Try to parse and pretty print if it's JSON string
     try {
-      const parsed = JSON.parse(data);
+      // `JSON.parse` is typed `any`; the value is only ever re-serialised, never read.
+      const parsed: unknown = JSON.parse(data);
       return JSON.stringify(parsed, null, 2);
     } catch {
       return data;

@@ -1,63 +1,59 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
+/**
+ * Theme preference and its resolution to an actual appearance.
+ *
+ * The system preference is read through `useSyncExternalStore` rather than mirrored into
+ * state inside an effect: the media query is an external store, and subscribing to it
+ * directly is what keeps the resolved theme correct without a render-then-correct pass.
+ */
+
+export type Theme = 'light' | 'dark' | 'system';
+
+const STORAGE_KEY = 'theme';
+const DARK_QUERY = '(prefers-color-scheme: dark)';
+
+function readStoredTheme(): Theme {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+}
+
+function subscribeToSystemTheme(onChange: () => void): () => void {
+  const query = window.matchMedia(DARK_QUERY);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+
+function getSystemPrefersDark(): boolean {
+  return window.matchMedia(DARK_QUERY).matches;
+}
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem('theme') as Theme | null;
-    return stored || 'system';
-  });
+  const [theme, setThemeState] = useState<Theme>(readStoredTheme);
+  const systemPrefersDark = useSyncExternalStore(subscribeToSystemTheme, getSystemPrefersDark);
 
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window === 'undefined') return 'light';
-    return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-  });
+  const isDark = theme === 'dark' || (theme === 'system' && systemPrefersDark);
 
-  const applyTheme = useCallback((newTheme: Theme) => {
-    const isDark = newTheme === 'dark' ||
-      (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  // The class on <html> is an external system, which is exactly what an effect is for.
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+  }, [isDark]);
 
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      setResolvedTheme('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      setResolvedTheme('light');
-    }
+  const setTheme = useCallback((next: Theme) => {
+    localStorage.setItem(STORAGE_KEY, next);
+    setThemeState(next);
   }, []);
 
-  const setTheme = useCallback((newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
-    applyTheme(newTheme);
-  }, [applyTheme]);
-
   const toggleTheme = useCallback(() => {
-    const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-  }, [resolvedTheme, setTheme]);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    if (theme !== 'system') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => applyTheme('system');
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme, applyTheme]);
-
-  // Apply theme on mount
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme, applyTheme]);
+    // Toggling from `system` pins the opposite of whatever is showing right now.
+    setTheme(isDark ? 'light' : 'dark');
+  }, [isDark, setTheme]);
 
   return {
     theme,
-    resolvedTheme,
+    resolvedTheme: isDark ? ('dark' as const) : ('light' as const),
+    isDark,
     setTheme,
     toggleTheme,
-    isDark: resolvedTheme === 'dark',
   };
 }

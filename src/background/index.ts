@@ -1,315 +1,227 @@
-// src/background/index.ts
-import browser from '../utils/browser';
+import type { RequestType } from '@shared/types';
+import type {
+  BroadcastMessage,
+  ClearTabRequestsResponse,
+  GetRequestsResponse,
+} from '@shared/messaging';
+import { isRequestMessage } from '@shared/messaging';
+import { headersToRecord, parseContentLength } from './headers';
+import { rememberHint, takeHint } from './page-hints';
+import { extractRequestBody } from './request-body';
+import {
+  addRequest,
+  clearTab,
+  countRequests,
+  forgetTab,
+  getRequests,
+  updateRequest,
+} from './request-store';
 
-// Enable side panel on action click
-chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
-  .catch((error: Error) => console.error('Error setting side panel behavior:', error));
+/**
+ * Service worker: the only place that talks to `chrome.webRequest`.
+ *
+ * It observes the four lifecycle events of every request, folds them into a single
+ * record per `requestId`, and pushes the result to the side panel. It never blocks a
+ * request — the extension is an observer, and `webRequestBlocking` is unavailable under
+ * Manifest V3 anyway.
+ */
 
-// Interfaces pour les types
-interface DetailedRequest {
-  id: string;
-  url: string;
-  method: string;
-  timestamp: number;
-  statusCode?: number;
-  responseSize?: number;
-  contentType?: string;
-  requestHeaders?: Record<string, string>;
-  responseHeaders?: Record<string, string>;
-  requestBody?: string;
-  ip?: string;
-  tabId: number;
-  tabUrl?: string;
-  referer?: string;
-  origin?: string;
-  requestType?: string;
-}
+const ALL_URLS: chrome.webRequest.RequestFilter = { urls: ['<all_urls>'] };
 
-// Generate unique ID for requests
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-}
+/** `tabId` is -1 for requests with no owning tab (other extensions, prefetch, …). */
+const NO_TAB = -1;
 
-// Broadcast updates to sidepanel
-function broadcastUpdate(tabId: number): void {
-  if (tabId <= 0) return;
+const BADGE_COLOUR = '#4688f1';
 
-  const requests = detailedRequests[tabId] || [];
+/**
+ * Broadcasting on every lifecycle event would send the full request array several
+ * thousand times on a busy page. Coalescing into one frame-ish window keeps the panel
+ * live without flooding the message port.
+ */
+const BROADCAST_INTERVAL_MS = 120;
 
-  // Send message to all extension contexts (sidepanel, popup, etc.)
-  chrome.runtime.sendMessage({
-    type: 'UPDATE_REQUESTS',
-    payload: {
-      tabId,
-      requests,
-    },
-  }).catch(() => {
-    // Ignore errors when no listeners (sidepanel not open)
-  });
-}
+const pendingBroadcasts = new Set<number>();
+let broadcastTimer: ReturnType<typeof setTimeout> | undefined;
 
-interface WebRequestDetails {
-  url: string;
-  method: string;
-  tabId: number;
-  requestId: string;
-  timeStamp: number;
-  type: string;
-  frameId: number;
-  parentFrameId: number;
-  requestBody?: {
-    raw?: { bytes: ArrayBuffer }[];
-    formData?: Record<string, string[]>;
-  };
-}
+function scheduleBroadcast(tabId: number): void {
+  if (tabId === NO_TAB) return;
+  pendingBroadcasts.add(tabId);
 
-interface WebRequestHeadersDetails extends WebRequestDetails {
-  requestHeaders?: {name: string; value: string}[];
-  responseHeaders?: {name: string; value: string}[];
-  statusCode?: number;
-}
+  if (broadcastTimer !== undefined) return;
+  broadcastTimer = setTimeout(() => {
+    broadcastTimer = undefined;
+    const tabIds = [...pendingBroadcasts];
+    pendingBroadcasts.clear();
 
-interface Tab {
-  id?: number;
-  url?: string;
-  title?: string;
-  active: boolean;
-  index: number;
-  windowId: number;
-}
-
-interface Message {
-  type: string;
-  payload?: any;
-}
-
-interface SendResponseCallback {
-  (response?: any): void;
-}
-
-interface MessageSender {
-  tab?: Tab;
-  frameId?: number;
-  id?: string;
-  url?: string;
-  origin?: string;
-}
-
-// Stocker les requêtes détaillées
-const detailedRequests: { [tabId: number]: DetailedRequest[] } = {};
-
-// Convertir les headers en objet
-function headersToObject(headers: {name: string; value: string}[] | undefined): Record<string, string> {
-  const result: Record<string, string> = {};
-  if (headers) {
-    headers.forEach((header) => {
-      if (header.name && header.value) {
-        result[header.name.toLowerCase()] = header.value;
-      }
-    });
-  }
-  return result;
-}
-
-// Helper to extract request body
-function extractRequestBody(details: WebRequestDetails): string | undefined {
-  if (!details.requestBody) return undefined;
-
-  // Handle form data
-  if (details.requestBody.formData) {
-    const formData: Record<string, string> = {};
-    for (const [key, values] of Object.entries(details.requestBody.formData)) {
-      formData[key] = values.join(', ');
+    for (const id of tabIds) {
+      const message: BroadcastMessage = {
+        type: 'REQUESTS_UPDATED',
+        payload: { tabId: id, requests: getRequests(id) },
+      };
+      // Rejects when the side panel is closed, which is the normal case — not an error.
+      chrome.runtime.sendMessage(message).catch(() => undefined);
+      updateBadge(id);
     }
-    return JSON.stringify(formData);
-  }
-
-  // Handle raw data
-  if (details.requestBody.raw && details.requestBody.raw.length > 0) {
-    try {
-      const decoder = new TextDecoder('utf-8');
-      const rawData = details.requestBody.raw.map(item => {
-        if (item.bytes) {
-          return decoder.decode(item.bytes);
-        }
-        return '';
-      }).join('');
-      return rawData;
-    } catch {
-      return '[Binary data]';
-    }
-  }
-
-  return undefined;
+  }, BROADCAST_INTERVAL_MS);
 }
 
-// Utiliser l'API webRequest de manière compatible avec Manifest V3
-// Pour capturer les requêtes sans les bloquer
-browser.webRequest.onBeforeRequest.addListener(
-  function(details: WebRequestDetails): void {
-    const tabId = details.tabId;
-    if (tabId <= 0) return; // Ignorer les requêtes qui ne sont pas associées à un onglet
+function updateBadge(tabId: number): void {
+  const count = countRequests(tabId);
+  void chrome.action.setBadgeText({ tabId, text: count > 0 ? String(count) : '' });
+  void chrome.action.setBadgeBackgroundColor({ tabId, color: BADGE_COLOUR });
+}
 
-    // Créer un nouvel objet de requête avec ID unique
-    const requestData: DetailedRequest = {
-      id: generateId(),
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.sidePanel
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((error: unknown) => console.error('Cannot set side panel behaviour:', error));
+});
+
+chrome.webRequest.onBeforeRequest.addListener(
+  (details) => {
+    if (details.tabId === NO_TAB) return;
+
+    addRequest({
+      id: details.requestId,
       url: details.url,
       method: details.method,
-      timestamp: Date.now(),
-      tabId: tabId,
-      requestType: details.type as DetailedRequest['requestType'],
-      requestBody: extractRequestBody(details),
-    };
-
-    // Initialiser le tableau pour ce tab si nécessaire
-    if (!detailedRequests[tabId]) {
-      detailedRequests[tabId] = [];
-    }
-
-    // Ajouter la requête
-    detailedRequests[tabId].push(requestData);
-
-    // Récupérer l'URL de l'onglet
-    browser.tabs.get(tabId).then((tab: Tab) => {
-      if (tab.url) {
-        requestData.tabUrl = tab.url;
-      }
-      // Broadcast update after getting tab URL
-      broadcastUpdate(tabId);
-    }).catch((error: Error) => {
-      console.error('Erreur lors de la récupération de l\'URL de l\'onglet:', error);
-      // Still broadcast even on error
-      broadcastUpdate(tabId);
+      timestamp: details.timeStamp,
+      status: 'pending',
+      tabId: details.tabId,
+      requestType: details.type as RequestType,
+      initiator: takeHint(details.method, details.url),
+      requestBody: extractRequestBody(details.requestBody),
     });
 
-    // Mettre à jour le badge avec le nombre de requêtes
-    const count = detailedRequests[tabId].length;
-    browser.action.setBadgeText({
-      text: count.toString(),
-      tabId
-    });
-    browser.action.setBadgeBackgroundColor({
-      color: '#4688F1',
-      tabId
-    });
+    scheduleBroadcast(details.tabId);
   },
-  { urls: ["<all_urls>"] },
-  ["requestBody"]
+  ALL_URLS,
+  ['requestBody'],
 );
 
-// Capturer les headers de requête
-browser.webRequest.onSendHeaders.addListener(
-  function(details: WebRequestHeadersDetails): void {
-    const tabId = details.tabId;
-    if (tabId <= 0) return;
+chrome.webRequest.onSendHeaders.addListener(
+  (details) => {
+    if (details.tabId === NO_TAB) return;
 
-    // Trouver la requête correspondante
-    const requests = detailedRequests[tabId] || [];
-    const request = requests.find(req => req.url === details.url && !req.requestHeaders);
+    const requestHeaders = headersToRecord(details.requestHeaders);
+    const updated = updateRequest(details.tabId, details.requestId, {
+      requestHeaders,
+      referer: requestHeaders['referer'] ?? requestHeaders['referrer'],
+      origin: requestHeaders['origin'],
+    });
 
-    if (request) {
-      request.requestHeaders = headersToObject(details.requestHeaders);
+    if (updated) scheduleBroadcast(details.tabId);
+  },
+  ALL_URLS,
+  ['requestHeaders'],
+);
 
-      // Extraire spécifiquement les headers importants comme Origin et Referer
-      if (request.requestHeaders) {
-        const headers = request.requestHeaders;
-        request.referer = headers['referer'] || headers['referrer'];
-        request.origin = headers['origin'];
+chrome.webRequest.onHeadersReceived.addListener(
+  (details) => {
+    if (details.tabId === NO_TAB) return;
+
+    const responseHeaders = headersToRecord(details.responseHeaders);
+    const updated = updateRequest(details.tabId, details.requestId, {
+      statusCode: details.statusCode,
+      statusLine: details.statusLine,
+      responseHeaders,
+      contentType: responseHeaders['content-type'],
+      responseSize: parseContentLength(responseHeaders['content-length']),
+    });
+
+    if (updated) scheduleBroadcast(details.tabId);
+  },
+  ALL_URLS,
+  ['responseHeaders'],
+);
+
+chrome.webRequest.onCompleted.addListener((details) => {
+  if (details.tabId === NO_TAB) return;
+
+  const updated = updateRequest(details.tabId, details.requestId, {
+    status: 'complete',
+    statusCode: details.statusCode,
+    ip: details.ip,
+    fromCache: details.fromCache,
+    durationMs: Math.max(0, Math.round(details.timeStamp - getStartTime(details))),
+  });
+
+  if (updated) scheduleBroadcast(details.tabId);
+}, ALL_URLS);
+
+chrome.webRequest.onErrorOccurred.addListener((details) => {
+  if (details.tabId === NO_TAB) return;
+
+  const updated = updateRequest(details.tabId, details.requestId, {
+    status: 'failed',
+    error: details.error,
+    ip: details.ip,
+    fromCache: details.fromCache,
+  });
+
+  if (updated) scheduleBroadcast(details.tabId);
+}, ALL_URLS);
+
+/** The start timestamp lives on the stored record; fall back to the event's own clock. */
+function getStartTime(details: { tabId: number; requestId: string; timeStamp: number }): number {
+  const stored = getRequests(details.tabId).find((request) => request.id === details.requestId);
+  return stored?.timestamp ?? details.timeStamp;
+}
+
+chrome.runtime.onMessage.addListener(
+  (message: unknown, _sender, sendResponse): boolean | undefined => {
+    // Any extension page can post here, so the payload is narrowed before it is trusted.
+    if (!isRequestMessage(message)) return undefined;
+
+    if (message.type === 'GET_REQUESTS') {
+      const explicitTabId = message.payload?.tabId;
+
+      if (typeof explicitTabId === 'number') {
+        sendResponse({ requests: getRequests(explicitTabId) } satisfies GetRequestsResponse);
+        return undefined;
       }
 
-      // Broadcast update
-      broadcastUpdate(tabId);
-    }
-  },
-  { urls: ["<all_urls>"] },
-  ["requestHeaders"]
-);
-
-// Capturer les réponses et leurs headers
-browser.webRequest.onHeadersReceived.addListener(
-  function(details: WebRequestHeadersDetails): void {
-    const tabId = details.tabId;
-    if (tabId <= 0) return;
-
-    // Trouver la requête correspondante
-    const requests = detailedRequests[tabId] || [];
-    const request = requests.find(req => req.url === details.url && !req.responseHeaders);
-
-    if (request) {
-      request.statusCode = details.statusCode;
-      request.responseHeaders = headersToObject(details.responseHeaders);
-
-      // Extraire des informations spécifiques des headers
-      const headers = request.responseHeaders;
-      if (headers) {
-        request.contentType = headers['content-type'];
-        if (headers['content-length']) {
-          request.responseSize = parseInt(headers['content-length']);
-        }
-      }
-
-      // Broadcast update
-      broadcastUpdate(tabId);
-    }
-  },
-  { urls: ["<all_urls>"] },
-  ["responseHeaders"]
-);
-
-// Traiter les messages depuis le popup ou les content scripts
-browser.runtime.onMessage.addListener(
-  function(message: Message, _sender: MessageSender, sendResponse: SendResponseCallback): boolean {
-    if (message.type === 'GET_DETAILED_REQUESTS') {
-      browser.tabs.query({ active: true, currentWindow: true }).then((tabs: Tab[]) => {
-        const tabId = tabs[0]?.id;
-        
-        if (tabId && detailedRequests[tabId]) {
+      chrome.tabs
+        .query({ active: true, currentWindow: true })
+        .then(([tab]) => {
           sendResponse({
-            requests: detailedRequests[tabId]
-          });
-        } else {
+            requests: tab?.id === undefined ? [] : getRequests(tab.id),
+          } satisfies GetRequestsResponse);
+        })
+        .catch((error: unknown) => {
           sendResponse({
-            requests: []
-          });
-        }
-      }).catch((error: Error) => {
-        console.error('Erreur lors de la récupération de l\'onglet actif:', error);
-        sendResponse({ 
-          requests: [],
-          error: error.message
+            requests: [],
+            error: error instanceof Error ? error.message : String(error),
+          } satisfies GetRequestsResponse);
         });
-      });
-      
-      return true; // Indique que nous allons répondre de manière asynchrone
-    }
-    
-    // Gérer la demande d'effacement des requêtes pour un onglet
-    if (message.type === 'CLEAR_TAB_REQUESTS' && message.payload && message.payload.tabId) {
-      const tabId = message.payload.tabId;
-      
-      // Réinitialiser les requêtes pour cet onglet
-      detailedRequests[tabId] = [];
-      
-      // Mettre à jour le badge
-      browser.action.setBadgeText({
-        text: '',
-        tabId
-      });
-      
-      // Confirmer l'action
-      sendResponse({ success: true });
+
+      // Keeps the message port open for the asynchronous `sendResponse` above.
       return true;
     }
 
-    return false;
-  }
+    if (message.type === 'PAGE_REQUEST_OBSERVED') {
+      rememberHint(message.payload);
+      return undefined;
+    }
+
+    // The union is exhausted here; TypeScript narrows the remainder to CLEAR_TAB_REQUESTS.
+    {
+      clearTab(message.payload.tabId);
+      updateBadge(message.payload.tabId);
+      sendResponse({ success: true } satisfies ClearTabRequestsResponse);
+      return undefined;
+    }
+  },
 );
 
-// Nettoyer les requêtes lorsqu'un onglet est fermé
-browser.tabs.onRemoved.addListener((tabId: number): void => {
-  if (detailedRequests[tabId]) {
-    delete detailedRequests[tabId];
-  }
+chrome.tabs.onRemoved.addListener((tabId) => {
+  forgetTab(tabId);
 });
 
-console.log('ShowXhrUrl: Background script chargé avec capture détaillée (Manifest V3)');
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  // A navigation makes the previous tab's requests belong to a page that is gone.
+  if (changeInfo.status === 'loading' && changeInfo.url) {
+    clearTab(tabId);
+    updateBadge(tabId);
+  }
+});

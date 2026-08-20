@@ -48,28 +48,30 @@ export function exportAsHar(requests: DetailedRequest[], options: ExportOptions)
       url: req.url,
       httpVersion: 'HTTP/1.1',
       cookies: [],
-      headers: options.includeHeaders && req.requestHeaders
-        ? Object.entries(req.requestHeaders).map(([name, value]) => ({ name, value }))
-        : [],
+      headers:
+        options.includeHeaders && req.requestHeaders
+          ? Object.entries(req.requestHeaders).map(([name, value]) => ({ name, value }))
+          : [],
       queryString: [],
       headersSize: -1,
       bodySize: -1,
     },
     response: {
-      status: req.statusCode || 0,
+      status: req.statusCode ?? 0,
       statusText: '',
       httpVersion: 'HTTP/1.1',
       cookies: [],
-      headers: options.includeHeaders && req.responseHeaders
-        ? Object.entries(req.responseHeaders).map(([name, value]) => ({ name, value }))
-        : [],
+      headers:
+        options.includeHeaders && req.responseHeaders
+          ? Object.entries(req.responseHeaders).map(([name, value]) => ({ name, value }))
+          : [],
       content: {
-        size: req.responseSize || 0,
-        mimeType: req.contentType || '',
+        size: req.responseSize ?? 0,
+        mimeType: req.contentType ?? '',
       },
       redirectURL: '',
       headersSize: -1,
-      bodySize: req.responseSize || -1,
+      bodySize: req.responseSize ?? -1,
     },
     cache: {},
     timings: {
@@ -175,20 +177,17 @@ export function exportAsPostman(requests: DetailedRequest[], options: ExportOpti
   downloadFile(json, `postman-collection-${timestamp}.json`, 'application/json');
 }
 
+/**
+ * The `document.execCommand('copy')` fallback that used to live here was removed: it is
+ * deprecated, and the async Clipboard API is available in every Chromium version that
+ * supports Manifest V3 side panels, so the fallback was unreachable dead code.
+ */
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
     return true;
-  } catch {
-    // Fallback for older browsers
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.left = '-999999px';
-    document.body.appendChild(textarea);
-    textarea.select();
-    const success = document.execCommand('copy');
-    document.body.removeChild(textarea);
-    return success;
+  } catch (error) {
+    console.error('Cannot write to the clipboard:', error);
+    return false;
   }
 }

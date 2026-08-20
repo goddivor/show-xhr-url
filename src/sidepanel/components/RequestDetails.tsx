@@ -15,10 +15,13 @@ function exportSingleRequest(request: DetailedRequest) {
 
 type Tab = 'headers' | 'request' | 'response' | 'simulate';
 
-function HeadersTable({ headers }: { headers?: Record<string, string> }) {
+function HeadersTable({ headers }: { headers?: Record<string, string> | undefined }) {
   if (!headers || Object.keys(headers).length === 0) {
     return (
-      <div className="request-details-table" style={{ padding: '8px', color: 'var(--text-secondary)' }}>
+      <div
+        className="request-details-table"
+        style={{ padding: '8px', color: 'var(--text-secondary)' }}
+      >
         No headers
       </div>
     );
@@ -49,7 +52,7 @@ function GeneralInfo({ request }: { request: DetailedRequest }) {
       </div>
       <div className="request-details-row">
         <div className="request-details-key">Status Code</div>
-        <div className="request-details-value">{request.statusCode || 'Pending'}</div>
+        <div className="request-details-value">{request.statusCode ?? 'Pending'}</div>
       </div>
       {request.contentType && (
         <div className="request-details-row">
@@ -148,21 +151,22 @@ export function RequestDetails() {
             <Button
               variant="primary"
               size="sm"
-              onClick={handleSimulate}
+              onClick={() => void handleSimulate()}
               title="Simulate request"
             >
               <Play size={14} color="#fff" />
               <span style={{ marginLeft: '4px' }}>Fetch</span>
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={handleCopyUrl} title="Copy URL">
-            {copied ? (
-              <Check size={14} color="#34a853" />
-            ) : (
-              <Copy size={14} color={iconColor} />
-            )}
+          <Button variant="ghost" size="sm" onClick={() => void handleCopyUrl()} title="Copy URL">
+            {copied ? <Check size={14} color="#34a853" /> : <Copy size={14} color={iconColor} />}
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => exportSingleRequest(selectedRequest)} title="Export as Postman">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => exportSingleRequest(selectedRequest)}
+            title="Export as Postman"
+          >
             <Download size={14} color={iconColor} />
           </Button>
           <Button variant="ghost" size="sm" onClick={handleOpenInTab} title="Open in new tab">
@@ -190,8 +194,8 @@ export function RequestDetails() {
         {activeTab === 'headers' && <GeneralInfo request={selectedRequest} />}
         {activeTab === 'request' && <HeadersTable headers={selectedRequest.requestHeaders} />}
         {activeTab === 'response' && <HeadersTable headers={selectedRequest.responseHeaders} />}
-        {activeTab === 'simulate' && (
-          simulationResult ? (
+        {activeTab === 'simulate' &&
+          (simulationResult ? (
             <ResponseViewer
               result={simulationResult}
               onClose={() => {
@@ -205,7 +209,11 @@ export function RequestDetails() {
                 <>
                   <Loader2 size={24} className="animate-spin" color="var(--accent-color)" />
                   <p>Fetching response...</p>
-                  <Button variant="ghost" onClick={handleCancelSimulation} style={{ color: '#ea4335' }}>
+                  <Button
+                    variant="ghost"
+                    onClick={handleCancelSimulation}
+                    style={{ color: '#ea4335' }}
+                  >
                     <Square size={14} color="#ea4335" />
                     <span style={{ marginLeft: '4px' }}>Cancel</span>
                   </Button>
@@ -213,15 +221,14 @@ export function RequestDetails() {
               ) : (
                 <>
                   <p>Click the "Fetch" button to simulate this request</p>
-                  <Button variant="primary" onClick={handleSimulate}>
+                  <Button variant="primary" onClick={() => void handleSimulate()}>
                     <Play size={14} color="#fff" />
                     <span style={{ marginLeft: '4px' }}>Fetch Request</span>
                   </Button>
                 </>
               )}
             </div>
-          )
-        )}
+          ))}
       </div>
     </div>
   );

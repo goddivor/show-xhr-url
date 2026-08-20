@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 
 interface BadgeProps {
   children: ReactNode;
-  variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'method';
-  method?: string;
-  className?: string;
+  variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'method' | undefined;
+  method?: string | undefined;
+  className?: string | undefined;
 }
 
 const methodColors: Record<string, string> = {
@@ -17,8 +17,10 @@ const methodColors: Record<string, string> = {
   HEAD: 'badge-head',
 };
 
+const BADGE_FALLBACK = 'badge-default';
+
 const statusColors: Record<string, string> = {
-  default: 'badge-default',
+  default: BADGE_FALLBACK,
   success: 'badge-success',
   warning: 'badge-warning',
   error: 'badge-error',
@@ -26,17 +28,13 @@ const statusColors: Record<string, string> = {
 };
 
 export function Badge({ children, variant = 'default', method, className = '' }: BadgeProps) {
-  let colorClass = statusColors[variant] || statusColors.default;
+  let colorClass = statusColors[variant] ?? BADGE_FALLBACK;
 
   if (variant === 'method' && method) {
-    colorClass = methodColors[method.toUpperCase()] || 'badge-default';
+    colorClass = methodColors[method.toUpperCase()] ?? BADGE_FALLBACK;
   }
 
-  return (
-    <span className={`badge ${colorClass} ${className}`}>
-      {children}
-    </span>
-  );
+  return <span className={`badge ${colorClass} ${className}`}>{children}</span>;
 }
 
 export function MethodBadge({ method }: { method: string }) {
@@ -47,7 +45,7 @@ export function MethodBadge({ method }: { method: string }) {
   );
 }
 
-export function StatusBadge({ status }: { status?: number }) {
+export function StatusBadge({ status }: { status?: number | undefined }) {
   if (!status) {
     return <Badge variant="default">Pending</Badge>;
   }
